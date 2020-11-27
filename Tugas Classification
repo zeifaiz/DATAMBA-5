@@ -1,0 +1,156 @@
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+datset = pd.read_csv("Titanic.csv")
+
+df = pd.read_csv("Titanic.csv",index_col=0)
+df.head()
+
+df.info()
+
+#preprocess
+total = df.isnull().sum().sort_values(ascending=False)
+percent = (round((df.isnull().sum()/df.isnull().count()*100), 1)).sort_values(ascending=False)
+missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'persentase'])
+
+df.drop('Name', axis = 1, inplace= True)
+
+#ubah kolom sex karena kategorikal
+
+dfdummies_sex =pd.get_dummies(df['Sex'],drop_first=True)
+dfdummies_sex.head()
+
+df =pd.concat([dfdummies_sex, df],axis=1)
+df.drop(['Sex'],axis=1, inplace=True)
+
+df.rename(columns={"male": "Sex(Male:1, Female:0)"},inplace= True)
+
+
+
+df['Age'].fillna(df['Age'].median(), inplace = True)
+
+df['Party_Size'] = df['SibSp'] + df['Parch']
+df['Alone'] = 1
+df['Alone'][df['Party_Size'] > 0] = 0
+
+df.drop('SibSp', axis = 1, inplace= True)
+df.drop('Parch', axis = 1, inplace= True)
+
+df.drop('Ticket', axis=1, inplace=True)
+
+df['Fare'].fillna(df['Fare'].median(), inplace = True)
+
+df.drop('Cabin', axis=1, inplace=True)
+
+#ubah kolom Embarked karena kategorikal
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace = True)
+
+dfdummies_embarked =pd.get_dummies(df['Embarked'],drop_first=True)
+dfdummies_embarked.head()
+
+df =pd.concat([dfdummies_embarked, df],axis=1)
+df.drop(['Embarked'],axis=1, inplace=True)
+
+df.rename(columns={"Q": "Embarked_Q", "S": "Embarked_S"},inplace= True)
+
+
+#pisah df jadi X dan Y
+X=df.drop(['Survived'],axis=1).values
+Y=df.loc[:,'Survived'].values
+
+#split data X dan Y
+from sklearn.model_selection import train_test_split
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y,test_size =1/3, random_state=0)
+
+from sklearn.metrics import classification_report
+
+#scatterplot train data
+plt.scatter(X_train[:,4],X_train[:,5],c=Y_train)
+plt.title('Data XoR Train')
+
+#scatterplot test data
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_test)
+plt.title('Data XoR Test')
+
+#logistic Regression
+from sklearn.linear_model import LogisticRegression
+logreg = LogisticRegression()
+logreg.fit(X_train,Y_train)
+
+Y_pred_logreg =logreg.predict(X_test)
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_test)
+plt.title('Data XoR Test')
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_pred_logreg)
+plt.title("Data XoR dari K-NN")
+
+print(classification_report(Y_test,Y_pred_logreg))
+
+
+#K-Nearest Neighbours
+from sklearn.neighbors import KNeighborsClassifier
+knn =KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train,Y_train)
+
+Y_pred_knn =knn.predict(X_test)
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_test)
+plt.title('Data XoR Test')
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_pred_knn)
+plt.title("Data XoR dari K-NN")
+
+print(classification_report(Y_test,Y_pred_knn))
+
+#Support Vector Machine
+from sklearn.svm import SVC
+svm = SVC()
+svm.fit(X_train, Y_train)
+
+Y_pred_svm =svm.predict(X_test)
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_test)
+plt.title('Data XoR Test')
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_pred_svm)
+plt.title("Data XoR dari K-NN")
+
+print(classification_report(Y_test,Y_pred_svm))
+
+#decision Tree
+from sklearn.tree import DecisionTreeClassifier
+DecTree = DecisionTreeClassifier()
+DecTree.fit(X_train, Y_train)
+
+Y_pred_DecTree =DecTree.predict(X_test)
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_test)
+plt.title('Data XoR Test')
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_pred_DecTree)
+plt.title("Data XoR dari K-NN")
+
+print(classification_report(Y_test,Y_pred_DecTree))
+
+#random Forest
+from sklearn.ensemble import RandomForestClassifier
+RandFor = RandomForestClassifier()
+RandFor.fit(X_train, Y_train)
+
+Y_pred_RandFor =RandFor.predict(X_test)
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_test)
+plt.title('Data XoR Test')
+
+plt.scatter(X_test[:,4],X_test[:,5],c=Y_pred_RandFor)
+plt.title("Data XoR dari K-NN")
+
+print(classification_report(Y_test,Y_pred_RandFor))
+
+
+
